@@ -4,12 +4,12 @@ let n2 = 1.5; // Glass
 let time = 0;
 
 function setup() {
-  // This automatically centers the simulation on your screen
+  // Creates a responsive canvas
   let cnv = createCanvas(windowWidth > 800 ? 800 : windowWidth - 20, 500);
   cnv.style('display', 'block');
   cnv.style('margin', '20px auto');
   
-  // Create the slider and center it below the canvas
+  // Create and center the slider
   angleSlider = createSlider(0, 89, 45);
   angleSlider.style('width', '300px');
   angleSlider.style('display', 'block');
@@ -25,18 +25,15 @@ function draw() {
   let thetaI_deg = angleSlider.value();
   let thetaI = radians(thetaI_deg);
   
-  // Snell's Law and Fresnel Math
+  // Physics Calculations
   let thetaT = asin((n1 * sin(thetaI)) / n2);
   let brewster_deg = degrees(atan(n2 / n1));
   let intensity = pow(tan(thetaI - thetaT) / tan(thetaI + thetaT), 2);
   
-  // 1. Draw Main Simulation & Waves
   drawSimulation(thetaI, thetaT, intensity);
-  
-  // 2. Draw Real-Time Intensity Graph
   drawGraph(thetaI_deg, intensity);
   
-  // Data Text Labels
+  // Professional Labels
   fill(50); noStroke(); textSize(16); textStyle(BOLD);
   text(`Incident Angle: ${thetaI_deg}°`, 20, 40);
   fill(0, 102, 204);
@@ -51,26 +48,34 @@ function drawSimulation(ti, tt, intens) {
   let cx = width / 2 - 100; 
   let cy = 300;
   
-  // The Glass Medium
+  // Glass Medium
   fill(235, 245, 255); noStroke();
   rect(0, cy, width, height - cy);
   
-  // Normal line (Dashed)
+  // Normal line
   stroke(180); drawingContext.setLineDash([5, 5]);
   line(cx, 100, cx, 500); drawingContext.setLineDash([]);
   
-  // Incident Wave (Red)
+  // Rays + Waves
   drawWaveRay(cx, cy, ti, 250, color(255, 0, 0), 1.0, true);
-  // Refracted Wave (Light Red)
   drawWaveRay(cx, cy, tt, 200, color(255, 100, 100), 0.8, false);
-  // Reflected Wave (Fades out at Brewster's Angle!)
   drawWaveRay(cx, cy, -ti, 250, color(255, 0, 0, intens * 255), intens, false);
 }
 
 function drawWaveRay(x, y, angle, len, col, amp, isIncoming) {
-  stroke(col); strokeWeight(3);
   let dir = isIncoming ? -1 : 1;
-  for (let i = 0; i < len; i += 5) {
+  let endX = x + (len * dir) * sin(angle);
+  let endY = y - (len * dir) * cos(angle);
+
+  // 1. Draw the "Center Line" Ray Path
+  stroke(red(col), green(col), blue(col), 60); // Semi-transparent
+  strokeWeight(2);
+  line(x, y, endX, endY);
+
+  // 2. Draw the Oscillating Wave Points
+  stroke(col); 
+  strokeWeight(4);
+  for (let i = 0; i < len; i += 6) {
     let d = i * dir;
     let px = x + d * sin(angle);
     let py = y - d * cos(angle);
@@ -99,5 +104,4 @@ function drawGraph(currentAngle, currentIntens) {
   fill(255, 0, 0); noStroke();
   ellipse(gx + (currentAngle / 90) * gw, gy - currentIntens * gh, 8, 8);
   fill(0); textSize(10); text("0°", gx, gy + 15); text("90°", gx + gw - 15, gy + 15);
-  text("Reflectance Curve", gx, gy - gh - 10);
 }
